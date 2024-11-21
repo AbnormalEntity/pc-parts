@@ -1,0 +1,14 @@
+{
+    "type": "case",
+    "title": "Supermicro SYS-5019C-WR",
+    "price": 7784.14,
+    "image_url": "https://static.1k.by/images/products/ip/125/pp5/4/4742145/i0f2ad9deb.jpeg",
+    "data": {
+        "form_factor": 0,
+        "gaming": false,
+        "case_color": 0,
+        "case_material": 0,
+        "internal_2_5": 4,
+        "hdd_dock_station": false
+    }
+}

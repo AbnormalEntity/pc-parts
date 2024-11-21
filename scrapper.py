@@ -324,12 +324,10 @@ def parse_tables(soup, product_type):
             for row in table_data:
                 if len(row) >= 2 and row[0] in field_mapping[product_type]:
                     new_key = field_mapping[product_type][row[0]]
-
                     value = row[1].strip()
-
-                    if '+' in row[1]:
+                    if value == '+':
                         combined_data[new_key] = True
-                    elif '-' in row[1]:
+                    elif value == '-':
                         combined_data[new_key] = False
                     else:
                         if re.search(r'[А-Яа-я]', value):

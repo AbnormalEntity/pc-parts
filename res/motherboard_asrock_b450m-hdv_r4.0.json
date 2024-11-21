@@ -27,15 +27,15 @@
         "sata_controller": true,
         "sata_6gbps_ports": 4,
         "m2_slots": 1,
-        "m2_interface": false,
+        "m2_interface": "PCI-E/SATA 3.0",
         "ethernet": 1000,
         "wifi_type": false,
         "bluetooth": false,
         "audio_channels": "7.1",
         "integrated_graphics": false,
         "usb_ports_total": 12,
-        "main_power_connector": false,
-        "cpu_power_connector": false,
+        "main_power_connector": "24-pin",
+        "cpu_power_connector": "4-pin",
         "form_factor": "microATX",
         "cooling_type": 0
     }

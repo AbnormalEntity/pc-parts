@@ -1,0 +1,25 @@
+{
+    "type": "case",
+    "title": "Gigabyte Aorus C700 Glass",
+    "price": 1369.42,
+    "image_url": "https://static.1k.by/images/products/ip/125/pp3/a/4514971/i95f8b7f78.png",
+    "data": {
+        "form_factor": "Full-Tower",
+        "motherboard_format": "ATX,Mini-ITX,EATX,Micro-ATX",
+        "max_motherboard_size": "eATX",
+        "gaming": true,
+        "case_color": 0,
+        "case_material": 0,
+        "side_window": true,
+        "window_material": 0,
+        "internal_2_5": 6,
+        "combined_2_5_3_5": 4,
+        "tool_less_mounting": false,
+        "hdd_dock_station": false,
+        "max_cpu_cooler_height": 198,
+        "max_gpu_length": 490,
+        "max_psu_length": 200,
+        "psu_location": 0,
+        "liquid_cooling_support": true
+    }
+}

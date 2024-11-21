@@ -14,7 +14,7 @@
         "combined_12v_load": 550,
         "efficiency": "89.1 %",
         "detachable_cables": false,
-        "motherboard_connector_type": true,
+        "motherboard_connector_type": "24+4 pin",
         "4_pin_cpu_connectors_count": 1,
         "4_plus_4_pin_cpu_connectors_count": 1,
         "8_pin_cpu_connectors_count": 1,
