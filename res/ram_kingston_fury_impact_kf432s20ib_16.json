@@ -1,0 +1,19 @@
+{
+    "type": "ram",
+    "title": "Kingston FURY Impact KF432S20IB_16",
+    "price": 141.4,
+    "image_url": "https://static.1k.by/images/products/ip/125/pp6/3/4581223/if4e0cae36.jpg",
+    "data": {
+        "type": "DDR4",
+        "form_factor": "SODIMM",
+        "module_capacity": 16,
+        "module_count": 1,
+        "clock_frequency": 3200,
+        "ecc_support": false,
+        "registered": false,
+        "low_profile": false,
+        "heat_spreader": true,
+        "xmp_support": true,
+        "lighting": false
+    }
+}

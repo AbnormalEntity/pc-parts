@@ -1,0 +1,23 @@
+{
+    "type": "case",
+    "title": "Zalman i3 Black",
+    "price": 198.46,
+    "image_url": "https://static.1k.by/images/products/ip/125/pp7/5/3273903/ibfc17a023.jpg",
+    "data": {
+        "form_factor": false,
+        "motherboard_format": false,
+        "gaming": true,
+        "case_color": 0,
+        "case_material": 0,
+        "side_window": true,
+        "internal_3_5": 2,
+        "internal_2_5": 3,
+        "tool_less_mounting": true,
+        "hdd_dock_station": false,
+        "max_cpu_cooler_height": 156,
+        "max_gpu_length": 360,
+        "psu_location": 0,
+        "liquid_cooling_support": true,
+        "usb_3_0_ports": 1
+    }
+}

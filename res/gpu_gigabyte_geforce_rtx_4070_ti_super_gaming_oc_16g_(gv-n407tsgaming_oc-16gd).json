@@ -1,0 +1,30 @@
+{
+    "type": "gpu",
+    "title": "Gigabyte GeForce RTX 4070 Ti Super Gaming OC 16G (GV-N407TSGAMING OC-16GD)",
+    "price": 3902.14,
+    "image_url": "https://static.1k.by/images/products/ip/125/pp9/5/4887599/i45eefab8f.png",
+    "data": {
+        "connection_type": false,
+        "manufacturer": "NVIDIA",
+        "series": "GeForce",
+        "name": "NVIDIA GeForce RTX 4070 Ti Super",
+        "slots_count": "3.1",
+        "low_profile": false,
+        "passive_cooling": false,
+        "fans_count": 3,
+        "memory_type": "GDDR6X",
+        "memory_size": 16384,
+        "memory_frequency": 22400,
+        "memory_bus": 256,
+        "sli_crossfire": false,
+        "crossfire_x": false,
+        "nvlink": false,
+        "ray_tracing": true,
+        "directx_version": "12 Ultimate",
+        "opengl_version": "4.6",
+        "additional_power_required": true,
+        "additional_power_connector": "16 pin",
+        "recommended_power_supply": 750,
+        "width": 300
+    }
+}

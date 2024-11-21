@@ -1,0 +1,28 @@
+{
+    "type": "psu",
+    "title": "be quiet! System Power 10 550W BN327",
+    "price": 217.4,
+    "image_url": "https://static.1k.by/images/products/ip/125/ppf/b/4674588/ia0f7e477f.jpg",
+    "data": {
+        "form_factor": "ATX",
+        "power": 550,
+        "fan_diameter": 120,
+        "pfc": 0,
+        "80_plus_certificate": "Bronze",
+        "current_12v_line": 4583,
+        "separate_12v_lines": 1,
+        "combined_12v_load": 550,
+        "efficiency": "89.1 %",
+        "detachable_cables": false,
+        "motherboard_connector_type": true,
+        "4_pin_cpu_connectors_count": 1,
+        "4_plus_4_pin_cpu_connectors_count": 1,
+        "8_pin_cpu_connectors_count": 1,
+        "6_plus_2_pin_pci_e_connectors_count": 2,
+        "8_pin_pci_e_connectors_count": 2,
+        "4_pin_ide_connectors_count": 1,
+        "15_pin_sata_connectors_count": 6,
+        "width": 140,
+        "weight": 183
+    }
+}

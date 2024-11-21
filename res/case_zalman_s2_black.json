@@ -1,0 +1,28 @@
+{
+    "type": "case",
+    "title": "Zalman S2 Black",
+    "price": 151.8,
+    "image_url": "https://static.1k.by/images/products/ip/125/ppa/9/3463781/i926dc1793.jpg",
+    "data": {
+        "form_factor": false,
+        "motherboard_format": false,
+        "max_motherboard_size": "ATX",
+        "gaming": false,
+        "case_color": 0,
+        "case_material": 0,
+        "side_window": true,
+        "window_material": 0,
+        "internal_3_5": 3,
+        "internal_2_5": 2,
+        "combined_2_5_3_5": 2,
+        "tool_less_mounting": true,
+        "hdd_dock_station": false,
+        "max_cpu_cooler_height": 156,
+        "max_gpu_length": 330,
+        "max_psu_length": 180,
+        "psu_location": 0,
+        "liquid_cooling_support": true,
+        "usb_2_0_ports": 2,
+        "usb_3_0_ports": 1
+    }
+}

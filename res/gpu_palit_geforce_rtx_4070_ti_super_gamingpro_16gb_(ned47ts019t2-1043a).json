@@ -1,0 +1,28 @@
+{
+    "type": "gpu",
+    "title": "Palit GeForce RTX 4070 Ti Super GamingPro 16GB (NED47TS019T2-1043A)",
+    "price": 3150.0,
+    "image_url": "https://static.1k.by/images/products/ip/125/pp4/d/4887664/ia40c4ad0a.png",
+    "data": {
+        "connection_type": false,
+        "manufacturer": "NVIDIA",
+        "series": "GeForce",
+        "name": "NVIDIA GeForce RTX 4070 Ti Super",
+        "slots_count": "3.1",
+        "low_profile": false,
+        "passive_cooling": false,
+        "fans_count": 3,
+        "memory_type": "GDDR6X",
+        "memory_size": 16384,
+        "memory_frequency": 22400,
+        "memory_bus": 256,
+        "sli_crossfire": false,
+        "crossfire_x": false,
+        "ray_tracing": true,
+        "directx_version": "12 Ultimate",
+        "additional_power_required": true,
+        "additional_power_connector": "16 pin",
+        "recommended_power_supply": 750,
+        "width": 3289
+    }
+}
