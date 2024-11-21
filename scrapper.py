@@ -353,7 +353,7 @@ def parse_tables(soup, product_type):
 def save_to_json(data, product_type, title):
     os.makedirs('res', exist_ok=True)
     filename = f'res/{product_type}_{title.lower().replace(" ", "_")}.json'
-    with open(filename, 'w', encoding='utf-8') as json_file:
+    with open(filename, 'w', encoding='windows-1251') as json_file:
         json.dump(data, json_file, ensure_ascii=False, indent=4)
     print(f'Данные успешно сохранены в {filename}')
 
