@@ -37,9 +37,9 @@
         "audio_channels": "7.1",
         "integrated_graphics": false,
         "usb_ports_total": 12,
-        "main_power_connector": "24-pin",
-        "cpu_power_connector": "8-pin",
+        "main_power_connector": 24,
+        "cpu_power_connector": 8,
         "form_factor": "mATX",
-        "cooling_type": "РїР°СЃСЃРёРІРЅРѕРµ"
+        "cooling_type": "пассивное"
     }
 }
