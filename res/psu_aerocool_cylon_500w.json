@@ -1,27 +1,27 @@
 {
     "type": "psu",
-    "title": "1stPlayer PS-600FK 600W",
-    "price": 119.02,
-    "image_url": "https://static.1k.by/images/products/ip/125/pp2/c/4502821/i9d1eb0894.jpg",
+    "title": "AeroCool Cylon 500W",
+    "price": 129.0,
+    "image_url": "https://static.1k.by/images/products/ip/125/pp2/5/3492215/ied06a2b0b.jpg",
     "data": {
         "form_factor": "ATX",
-        "power": 600,
+        "power": 500,
         "fan_diameter": 120,
-        "pfc": 0,
+        "pfc": "активный",
         "80_plus_certificate": "Bronze",
-        "current_12v_line": 50,
+        "efficiency_standard": "80 PLUS",
+        "current_12v_line": 37,
         "separate_12v_lines": 1,
-        "combined_12v_load": 600,
+        "combined_12v_load": 444,
         "efficiency": "85 %",
         "detachable_cables": false,
         "motherboard_connector_type": "24+4 pin",
         "4_pin_cpu_connectors_count": 1,
         "4_plus_4_pin_cpu_connectors_count": 1,
         "8_pin_cpu_connectors_count": 1,
+        "6_plus_2_pin_pci_e_connectors_count": 2,
         "8_pin_pci_e_connectors_count": 2,
-        "4_pin_ide_connectors_count": 2,
-        "15_pin_sata_connectors_count": 6,
-        "width": 150,
-        "weight": 19
+        "4_pin_ide_connectors_count": 3,
+        "15_pin_sata_connectors_count": 5
     }
 }

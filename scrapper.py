@@ -25,9 +25,6 @@ def parse_product_info(soup):
     except AttributeError:
         raise Exception('Не удалось найти необходимые элементы на странице.')
 
-def extract_numbers(data):
-    return ''.join(re.findall(r'\d+', data))
-
 def parse_tables(soup, product_type):
     tables_container = soup.find('div', class_='spec-info__main')
     
@@ -319,25 +316,37 @@ def parse_tables(soup, product_type):
             for row in table.find_all('tr')
             if row.find_all(['td', 'th'])
         ]
-        
+
+        measurement_units = [
+            'мгц', 'Гц', 'кГц', 'МГц', 'ГГц', 'дБ', 'Вт', 'нм', 'Мб',
+            'Гб', 'Тб', 'пб', 'Кб', 'МБ', 'ГБ', 'ТБ', 'пБ',
+            'кОм', 'МОм', 'ГОм', 'мА', 'А', 'кА', 'пФ', 'нФ', 'мФ', 'Ф',
+            'кВт', 'мВт', 'дм', 'см', 'м', 'км',
+            'пикосекунд', 'нс', 'мс', 'с', 'мин', 'ч', 'д',
+            'fps', 'dpi', 'ppi', 'ppm', 'RPM', 'K',
+            'дюймы', 'см', 'м', 'Гц', 'кГц', 'МГц',
+            'параметров', 'бит', 'pin'
+        ]
+    
         if product_type in field_mapping:
             for row in table_data:
                 if len(row) >= 2 and row[0] in field_mapping[product_type]:
                     new_key = field_mapping[product_type][row[0]]
                     value = row[1].strip()
+
                     if value == '+':
                         combined_data[new_key] = True
                     elif value == '-':
                         combined_data[new_key] = False
                     else:
-                        if re.search(r'[А-Яа-я]', value):
-                            number_str = extract_numbers(value)
-                            combined_data[new_key] = int(number_str) if number_str else 0
+                        if all(char.isdigit() or char.isspace() for char in value):
+                            numeric_value = int(value.replace(' ', ''))
+                            combined_data[new_key] = numeric_value
+                        elif any(unit in value for unit in measurement_units):
+                            numeric_value = re.sub(r'[^0-9]', '', value)
+                            combined_data[new_key] = int(numeric_value) if numeric_value else value
                         else:
-                            try:
-                                combined_data[new_key] = int(value)
-                            except ValueError:
-                                combined_data[new_key] = value
+                            combined_data[new_key] = value
 
     return combined_data
 

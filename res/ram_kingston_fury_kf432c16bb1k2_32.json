@@ -1,0 +1,19 @@
+{
+    "type": "ram",
+    "title": "Kingston Fury KF432C16BB1K2_32",
+    "price": 278.08,
+    "image_url": "https://static.1k.by/images/products/ip/125/ppc/9/4502891/i69d7989bd.jpg",
+    "data": {
+        "type": "DDR4",
+        "form_factor": "DIMM",
+        "module_capacity": 16,
+        "module_count": 2,
+        "clock_frequency": 3200,
+        "ecc_support": false,
+        "registered": false,
+        "low_profile": false,
+        "heat_spreader": true,
+        "xmp_support": true,
+        "lighting": false
+    }
+}

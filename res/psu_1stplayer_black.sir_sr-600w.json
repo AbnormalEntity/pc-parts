@@ -1,18 +1,19 @@
 {
     "type": "psu",
-    "title": "be quiet! System Power 10 550W BN327",
-    "price": 217.4,
-    "image_url": "https://static.1k.by/images/products/ip/125/ppf/b/4674588/ia0f7e477f.jpg",
+    "title": "1stPlayer Black.Sir SR-600W",
+    "price": 134.5,
+    "image_url": "https://static.1k.by/images/products/ip/125/pp3/d/4502818/ic6838898c.jpg",
     "data": {
         "form_factor": "ATX",
-        "power": 550,
+        "power": 600,
         "fan_diameter": 120,
         "pfc": "активный",
         "80_plus_certificate": "Bronze",
-        "current_12v_line": 4583,
+        "efficiency_standard": "80 PLUS",
+        "current_12v_line": 50,
         "separate_12v_lines": 1,
-        "combined_12v_load": 550,
-        "efficiency": "89.1 %",
+        "combined_12v_load": 600,
+        "efficiency": "85 %",
         "detachable_cables": false,
         "motherboard_connector_type": "24+4 pin",
         "4_pin_cpu_connectors_count": 1,
@@ -20,9 +21,9 @@
         "8_pin_cpu_connectors_count": 1,
         "6_plus_2_pin_pci_e_connectors_count": 2,
         "8_pin_pci_e_connectors_count": 2,
-        "4_pin_ide_connectors_count": 1,
-        "15_pin_sata_connectors_count": 6,
-        "width": 140,
-        "weight": "1.83 кг"
+        "4_pin_ide_connectors_count": 3,
+        "15_pin_sata_connectors_count": 5,
+        "width": 150,
+        "weight": "2.3 кг"
     }
 }
