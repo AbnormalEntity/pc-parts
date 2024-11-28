@@ -4,418 +4,254 @@ from bs4 import BeautifulSoup
 import json
 import os
 
-def fetch_page(url):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7'
-    }
-    
-    response = requests.get(url, headers=headers)
-    
-    if response.status_code != 200:
-        raise Exception(f'Ошибка при запросе: {response.status_code}')
-    
-    return BeautifulSoup(response.text, 'html.parser')
+class ProductScraper:
+    def __init__(self, url):
+        self.url = url
+        self.soup = None
+        self.product_type = None
+        self.title = ''
+        self.price = 0.0
 
-def parse_product_info(soup):
-    try:
-        title = soup.find('div', class_='heading').get_text(strip=True)
-        price = float(soup.find('div', class_='spec-about__price').get_text(strip=True).split(' –')[0].replace(',', '.').replace(' ', ''))
-        return title, price
-    except AttributeError:
-        raise Exception('Не удалось найти необходимые элементы на странице.')
-
-def parse_tables(soup, product_type):
-    tables_container = soup.find('div', class_='spec-info__main')
-    
-    if not tables_container:
-        raise Exception('Контейнер с таблицами не найден.')
-    
-    tables = tables_container.find_all('table')
-    
-    if not tables:
-        raise Exception('Таблицы не найдены.')
-    
-    combined_data = {}
-    
-    field_mapping = {
-        'case': {
-            '?Типоразмер': 'form_factor',
-            'Форм-фактор': 'motherboard_format',
-            'Макс. размер материнской платы': 'max_motherboard_size',
-            '?Игровой': 'gaming',
-            '?Цвет корпуса': 'case_color',
-            '?Материал корпуса': 'case_material',
-            #'Материал передней панели': 'front_panel_material',
-            '?Наличие окна на боковой стенке': 'side_window',
-            #'?Передняя дверь': 'front_door',
-            'Материал окна': 'window_material',
-            #'?LCD дисплей': 'lcd_display',
-            '?Внутренние 3,5': 'internal_3_5',
-            '?2,5': 'internal_2_5',
-            'комбинированный 2.5/3.5': 'combined_2_5_3_5',
-            '?Безвинтовое крепление в отсеках 3,5 и 5,25': 'tool_less_mounting',
-            '?Док-станция для HDD': 'hdd_dock_station',
-            '?Максимальная высота процессорного кулера': 'max_cpu_cooler_height',
-            '?Максимальная длина видеокарты': 'max_gpu_length',
-            #'Съёмная корзина жестких дисков': 'removable_hdd_basket',
-            #'?Количество слотов расширения': 'expansion_slots',
-            #'?Низкопрофильные платы расширения': 'low_profile_expansion_cards',
-            'Макс. длина блока питания': 'max_psu_length',
-            #'Шумоизоляция': 'soundproofing',
-            '?Расположение БП': 'psu_location',
-            #'Вентиляторы в комплекте': 'included_fans',
-            '?Возможность установки системы жидкостного охлаждения': 'liquid_cooling_support',
-            #'?Блок управления вентиляторами': 'fan_control_unit',
-            #'?Съемный воздушный фильтр': 'removable_air_filter',
-            #'Пылевые фильтры': 'dust_filters',
-            #'Количество встроенных вентиляторов': 'built_in_fans',
-            #'Количество мест для вентиляторов': 'fan_mounts',
-            'USB 2.0': 'usb_2_0_ports',
-            '?USB 3.0': 'usb_3_0_ports',
-            #'?Выход на наушники': 'headphone_out',
-            #'?Вход микрофонный': 'microphone_in',
-            #'USB 3.2 Gen1 Type-A': 'usb_3_2_gen1_type_a',
-            #'?Встроенный кард-ридер': 'built_in_card_reader',
-            #'Контроллер подсветки': 'lighting_controller',
-            #'Цвет подсветки кулера': 'fan_lighting_color',
-            #'Подсветка корпуса': 'case_lighting',
-            #'Крепление VESA': 'vesa_mount',
-            #'Замок': 'lock',
-            #'?Высота': 'height',
-            #'?Ширина': 'width',
-            #'?Глубина': 'depth',
-            #'?Вес': 'weight'
-        },
-        'cpu': {
-            '?Линейка': 'line',
-            '?Сокет': 'socket',
-            'Год выхода на рынок': 'release_year',
-            #'?Ядро': 'core',
-            '?Количество ядер': 'core_count',
-            #'Количество производительных ядер': 'performance_core_count',
-            'Количество потоков': 'thread_count',
-            '?Техпроцесс': 'process_technology',
-            '?Интегрированное графическое ядро': 'integrated_graphics',
-            '?Частота процессора': 'processor_clock',
-            #'Мин. частота производительных ядер': 'min_performance_core_clock',
-            #'Макс. частота производительных ядер': 'max_performance_core_clock',
-            #'?Частота с Turbo Boost': 'turbo_boost_clock',
-            '?Количество каналов памяти': 'memory_channels',
-            'Частота памяти': 'memory_clock',
-            '?Объем кэша L2': 'l2_cache_size',
-            '?Объем кэша L3': 'l3_cache_size',
-            '?Тепловыделение': 'tdp',
-            'Тип памяти': 'memory_type',
-            #'Встроенный контроллер PCI Express': 'pci_express_controller',
-            '?Комплектация': 'packaging',
-            #'Виртуализация Intel VT-x': 'intel_vt_x',
-            #'Виртуализация Intel VT-d': 'intel_vt_d',
-            #'Защищенная платформа Intel TXT': 'intel_txt'
-        },
-        'gpu': {
-            #'?Тип видеокарты': 'gpu_type',
-            '?Тип подключения': 'connection_type',
-            '?Код производителя': 'manufacturer_code',
-            '?Видеопроцессор': 'video_processor',
-            '?Производитель': 'manufacturer',
-            '?Линейка': 'series',
-            '?Название': 'name',
-            #'?Количество': 'quantity',
-            #'?Частота': 'frequency',
-            #'Кодовое название': 'code_name',
-            #'?Версия PCI Express': 'pci_express_version',
-            #'?Число поддерживаемых мониторов': 'supported_monitors_count',
-            #'?Макс. разрешение': 'max_resolution',
-            '?Количество занимаемых слотов': 'slots_count',
-            '?Низкопрофильная карта (Low Profile)': 'low_profile',
-            '?Пассивное охлаждение': 'passive_cooling',
-            '?Количество вентиляторов': 'fans_count',
-            #'?Дизайн системы охлаждения': 'cooling_design',
-            #'?Встроенный TV-тюнер': 'built_in_tv_tuner',
-            '?Тип памяти': 'memory_type',
-            '?Объем памяти': 'memory_size',
-            '?Частота памяти': 'memory_frequency',
-            '?Шина обмена с памятью': 'memory_bus',
-            '?SLI/CrossFire': 'sli_crossfire',
-            '?CrossFire X': 'crossfire_x',
-            #'?3-Way SLI': 'three_way_sli',
-            #'?Quad SLI': 'quad_sli',
-            '?NVLink': 'nvlink',
-            #'?TurboCache/HyperMemory': 'turbo_cache_hyper_memory',
-            #'?Поддержка CUDA': 'cuda_support',
-            #'?Поддержка AMD APP (ATI Stream)': 'amd_app_support',
-            'Трассировка лучей': 'ray_tracing',
-            #'?Математический блок': 'math_unit',
-            #'?Число универсальных процессоров': 'universal_processors_count',
-            '?Версия DirectX': 'directx_version',
-            '?Версия OpenGL': 'opengl_version',
-            #'?Число RT ядер': 'rt_cores_count',
-            #'?Выход VGA': 'vga_output',
-            #'?Выход видео компонентный': 'component_video_output',
-            #'?Выход HDMI': 'hdmi_output',
-            #'?Количество выходов HDMI': 'hdmi_outputs_count',
-            #'?Выход Mini HDMI': 'mini_hdmi_output',
-            #'?Выход Micro HDMI': 'micro_hdmi_output',
-            #'?Тип HDMI': 'hdmi_type',
-            #'?Выход DisplayPort': 'displayport_output',
-            #'?Количество выходов DisplayPort': 'displayport_outputs_count',
-            #'?Выход Mini DisplayPort': 'mini_displayport_output',
-            #'?Версия DisplayPort': 'displayport_version',
-            #'?USB Type-C': 'usb_type_c',
-            #'?HDCP': 'hdcp',
-            #'?VIVO': 'vivo',
-            #'?VESA Stereo (Mini-DIN)': 'vesa_stereo',
-            #'?TV-out': 'tv_out',
-            '?Необходимость дополнительного питания': 'additional_power_required',
-            '?Разъем дополнительного питания': 'additional_power_connector',
-            '?Рекомендуемая мощность блока питания': 'recommended_power_supply',
-            'Ширина': 'width',
-            #'?Высота': 'height',
-            #'?Толщина': 'thickness'
-        },
-        'motherboard': {
-            '?Производитель': 'manufacturer',
-            #'?Игровая': 'gaming',
-            #'Серверная': 'server',
-            '?Socket': 'socket',
-            'Поддерживаемые процессоры': 'supported_cpus',
-            '?Количество сокетов': 'socket_count',
-            '?Предустановленный процессор': 'preinstalled_cpu',
-            '?Тип': 'memory_type',
-            '?Поддержка буферизованной (RDIMM) памяти': 'buffered_memory_support',
-            '?Макс. объем': 'max_memory',
-            '?Количество слотов': 'memory_slots',
-            '?Максимальная': 'max_memory_frequency',
-            '?Двухканальный': 'dual_channel',
-            '?Трехканальный': 'triple_channel',
-            '?Четырехканальный': 'quad_channel',
-            '?Шестиканальный': 'hexa_channel',
-            #'?Производитель': 'chipset_manufacturer',
-            '?Название': 'chipset_name',
-            '?SLI/CrossFire': 'sli_crossfire',
-            #'?BIOS': 'bios',
-            #'?Восстановление BIOS': 'bios_recovery',
-            #'?Поддержка UEFI': 'uefi_support',
-            '?PCI-E 16x': 'pci_e_16x_slots',
-            '?PCI-E 1x': 'pci_e_1x_slots',
-            '?PCI Express 2.0': 'pci_express_2_0',
-            '?PCI Express 3.0': 'pci_express_3_0',
-            'PCI Express 4.0': 'pci_express_4_0',
-            'PCI Express 5.0': 'pci_express_5_0',
-            '?Режимы PCI-E': 'pci_e_modes',
-            '?Контроллер IDE': 'ide_controller',
-            '?Контроллер SATA': 'sata_controller',
-            #'?Режим работы SATA RAID': 'sata_raid_modes',
-            '?Количество разъемов SATA 6Gb/s': 'sata_6gbps_ports',
-            '?Количество слотов M.2': 'm2_slots',
-            'Тип интерфейса M.2': 'm2_interface',
-            'Тип слотов M.2': 'm2_slot_type',
-            #'?Контроллер SCSI': 'scsi_controller',
-            #'?Контроллер SAS': 'sas_controller',
-            '?Ethernet': 'ethernet',
-            '?Тип Wi-Fi': 'wifi_type',
-            '?Bluetooth': 'bluetooth',
-            #'?Производитель звукового чипа': 'audio_chip_manufacturer',
-            '?Звуковой чип': 'audio_chip',
-            '?Звуковая схема': 'audio_channels',
-            '?Встроенная графика': 'integrated_graphics',
-            '?Количество разъемов USB': 'usb_ports_total',
-            #'?Число разъемов USB на задней панели': 'usb_ports_rear',
-            #'?Коаксиальный выход на задней панели': 'coaxial_output',
-            #'?Оптический выход на задней панели': 'optical_output',
-            #'?LPT на задней панели': 'lpt_port',
-            #'?S-Video-выход на задней панели': 's_video_output',
-            #'?Компонентный видеовыход на задней панели': 'component_video_output',
-            #'?D-Sub на задней панели': 'd_sub_output',
-            #'?DVI на задней панели': 'dvi_output',
-            #'?HDMI на задней панели': 'hdmi_output',
-            #'?PS/2 (клавиатура) на задней панели': 'ps2_keyboard',
-            #'?PS/2 (мышь) на задней панели': 'ps2_mouse',
-            #'?DisplayPort': 'displayport',
-            #'?Разъем для подключения ленты RGB': 'rgb_connector',
-            #'?Выход S/PDIF': 'spdif_output',
-            #'?GAME/MIDI': 'game_midi',
-            #'?LPT': 'lpt',
-            #'?TV-out': 'tv_out',
-            #'?PS/2 (клавиатура)': 'ps2_keyboard',
-            #'?PS/2 (мышь)': 'ps2_mouse',
-            '?Основной разъем питания': 'main_power_connector',
-            '?Разъем питания процессора': 'cpu_power_connector',
-            '?Форм-фактор': 'form_factor',
-            '?Тип системы охлаждения': 'cooling_type',
-            #'Подсветка': 'backlight'
-        },
-        'psu': {
-            '?Форм-фактор': 'form_factor',
-            '?Мощность': 'power',
-            #'?Система охлаждения': 'cooling_system',
-            '?Диаметр вентилятора': 'fan_diameter',
-            '?PFC': 'pfc',
-            '?Сертификат 80 PLUS': '80_plus_certificate',
-            '?Стандарт эффективности': 'efficiency_standard',
-            '?Ток по линии +12V': 'current_12v_line',
-            #'?Назначение': 'designation',
-            'Количество отдельных линий +12V': 'separate_12v_lines',
-            'Комбинированная нагрузка по +12V': 'combined_12v_load',
-            'КПД': 'efficiency',
-            #'?Длина кабеля питания 12В': '12v_power_cable_length',
-            #'?Длина кабеля питания': 'power_cable_length',
-            '?Отстегивающиеся кабели': 'detachable_cables',
-            '?Тип разъема для материнской платы': 'motherboard_connector_type',
-            '?Число разъемов 4-pin CPU': '4_pin_cpu_connectors_count',
-            '?Число разъемов 4+4 pin CPU': '4_plus_4_pin_cpu_connectors_count',
-            '?Число разъемов 8-pin CPU': '8_pin_cpu_connectors_count',
-            '?Число разъемов 6+2-pin PCI-E': '6_plus_2_pin_pci_e_connectors_count',
-            '?Число разъемов 8-pin PCI-E': '8_pin_pci_e_connectors_count',
-            '?Число разъемов 4-pin IDE': '4_pin_ide_connectors_count',
-            '?Число разъемов 15-pin SATA': '15_pin_sata_connectors_count',
-            #'?Минимальное': 'min_input_voltage',
-            #'?Максимальное': 'max_input_voltage',
-            #'?Максимальный уровень шума': 'max_noise_level',
-            '?Ширина': 'width',
-            #'?Высота': 'height',
-            #'?Глубина': 'depth',
-            '?Вес': 'weight'
-        },
-        'ram': {
-            '?Тип': 'type',
-            '?Форм-фактор': 'form_factor',
-            '?Объем одного модуля': 'module_capacity',
-            '?Количество модулей': 'module_count',
-            #'Общий объем': 'total_capacity',
-            #'?Количество рангов': 'rank_count',
-            '?Тактовая частота': 'clock_frequency',
-            #'?Пропускная способность': 'bandwidth',
-            '?Поддержка ECC': 'ecc_support',
-            '?Буферизованная (Registered)': 'registered',
-            '?Низкопрофильная (Low Profile)': 'low_profile',
-            '?Радиатор': 'heat_spreader',
-            '?Поддержка XMP': 'xmp_support',
-            #'CAS Latency': 'cas_latency',
-            'Подсветка': 'lighting',
-            #'?Тайминги': 'timings',
-            #'?CL': 'cl',
-            #'?tRCD': 'trcd',
-            #'?tRP': 'trp',
-            #'?tRAS': 'tras',
-            #'?Дополнительная информация': 'additional_info',
-            #'?Напряжение питания': 'voltage',
-            #'?Чипы': 'chips',
-            #'?Количество': 'chip_count',
-            #'?Упаковка': 'packaging',
-            #'Объем': 'chip_capacity',
-            #'Тип микросхем': 'chip_type',
-            #'Количество ранков': 'rank_count_chip'
+    def fetch_page(self):
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7'
         }
-    }
+        
+        response = requests.get(self.url, headers=headers)
+        
+        if response.status_code != 200:
+            raise Exception(f'Ошибка при запросе: {response.status_code}')
+        
+        self.soup = BeautifulSoup(response.text, 'html.parser')
 
-    for table in tables:
-        table_data = [
+    def parse_product_info(self):
+        try:
+            self.title = self.soup.find('div', class_='heading').get_text(strip=True)
+            price_text = self.soup.find('div', class_='spec-about__price').get_text(strip=True).split(' –')[0]
+            self.price = float(price_text.replace(',', '.').replace(' ', ''))
+        except AttributeError:
+            raise Exception('Не удалось найти необходимые элементы на странице.')
+
+    def parse_tables(self):
+        tables_container = self.soup.find('div', class_='spec-info__main')
+        
+        if not tables_container:
+            raise Exception('Контейнер с таблицами не найден.')
+        
+        tables = tables_container.find_all('table')
+        
+        if not tables:
+            raise Exception('Таблицы не найдены.')
+
+        combined_data = {}
+        field_mapping = self.get_field_mapping()
+
+        for table in tables:
+            table_data = self.extract_table_data(table)
+            self.process_table_data(table_data, combined_data, field_mapping)
+
+        return combined_data
+
+    def extract_table_data(self, table):
+        return [
             [col.get_text(strip=True) for col in row.find_all(['td', 'th'])]
             for row in table.find_all('tr')
             if row.find_all(['td', 'th'])
         ]
 
-        measurement_units = [
-            'мгц', 'Гц', 'кГц', 'МГц', 'ГГц', 'дБ', 'Вт', 'нм', 'Мб',
-            'Гб', 'Тб', 'пб', 'Кб', 'МБ', 'ГБ', 'ТБ', 'пБ',
-            'кОм', 'МОм', 'ГОм', 'мА', 'А', 'кА', 'пФ', 'нФ', 'мФ', 'Ф',
-            'кВт', 'мВт', 'дм', 'см', 'м', 'км',
-            'пикосекунд', 'нс', 'мс', 'с', 'мин', 'ч', 'д',
-            'fps', 'dpi', 'ppi', 'ppm', 'RPM', 'K',
-            'дюймы', 'см', 'м', 'Гц', 'кГц', 'МГц',
-            'параметров', 'бит', 'pin'
-        ]
+    def process_table_data(self, table_data, combined_data, field_mapping):
+        measurement_units = self.get_measurement_units()
+
+        for row in table_data:
+            if len(row) >= 2 and row[0] in field_mapping[self.product_type]:
+                new_key = field_mapping[self.product_type][row[0]]
+                value = row[1].strip()
+                combined_data[new_key] = self.parse_value(value, measurement_units)
+
+    def parse_value(self, value, measurement_units):
+        value = value.replace("Micro-ATX", "mATX").replace("microATX", "mATX")
+        
+        if value == '+':
+            return True
+        elif value == '-':
+            return False
+        elif all(char.isdigit() or char.isspace() or char == '.' for char in value):
+            numeric_value = float(value.replace(' ', '').replace(',', '.'))
+            return int(numeric_value) if numeric_value.is_integer() else numeric_value
+        elif any(unit in value for unit in measurement_units):
+            numeric_value = re.sub(r'[^0-9.,]', '', value)
+            if numeric_value:
+                numeric_value = numeric_value.replace(',', '.')
+                numeric_value = float(numeric_value)
+                return int(numeric_value) if numeric_value.is_integer() else numeric_value
+            return value
+        else:
+            return value
     
-        if product_type in field_mapping:
-            for row in table_data:
-                if len(row) >= 2 and row[0] in field_mapping[product_type]:
-                    new_key = field_mapping[product_type][row[0]]
-                    value = row[1].strip()
-
-                    if value == '+':
-                        combined_data[new_key] = True
-                    elif value == '-':
-                        combined_data[new_key] = False
-                    else:
-                        if all(char.isdigit() or char.isspace() for char in value):
-                            numeric_value = int(value.replace(' ', ''))
-                            combined_data[new_key] = numeric_value
-                        elif any(unit in value for unit in measurement_units):
-                            numeric_value = re.sub(r'[^0-9]', '', value)
-                            combined_data[new_key] = int(numeric_value) if numeric_value else value
-                        else:
-                            combined_data[new_key] = value
-
-    return combined_data
-
-def save_to_json(data, product_type, title):
-    os.makedirs('res', exist_ok=True)
-    filename = f'res/{product_type}_{title.lower().replace(" ", "_")}.json'
-    with open(filename, 'w', encoding='windows-1251') as json_file:
-        json.dump(data, json_file, ensure_ascii=False, indent=4)
-    print(f'Данные успешно сохранены в {filename}')
-
-def parse_product_and_tables(url):
-    try:
-        product_type = determine_type_from_url(url)
-        soup = fetch_page(url)
-        raw_title, price = parse_product_info(soup)
-        
-        tables = parse_tables(soup, product_type)
-
-        if product_type == 'case':
-            title = ''.join(raw_title[22:])
-        elif product_type == 'cpu':
-            title = ''.join(raw_title[10:])
-        elif product_type == 'gpu':
-            title = ''.join(raw_title[11:])    
-        elif product_type == 'motherboard':
-            title = ''.join(raw_title[18:]) 
-        elif product_type == 'psu':
-            title = ''.join(raw_title[13:]) 
-        elif product_type == 'ram':
-            title = ''.join(raw_title[14:])   
-            title = title.replace('/', '_')       
-
-        # Get the image URL
-        img_tag = soup.find('img', class_='spec-images__img')
-        img_url = img_tag['src'] if img_tag and img_tag['src'] else None
-        
-        result = {
-            'type': product_type,
-            'title': title,
-            'price': price,
-            'image_url': img_url,
-            'data': tables
+    def get_field_mapping(self):
+        return {
+            'cpu': {
+                '?Сокет': 'socket',
+                'Год выхода на рынок': 'release_year',
+                '?Количество ядер': 'core_count',
+                'Количество потоков': 'thread_count',
+                '?Техпроцесс': 'process_technology',
+                '?Частота процессора': 'frequency',
+                '?Частота с Turbo Boost': 'turbo_boost_frequency',
+                '?Объем кэша L2': 'l2_cache_size',
+                '?Объем кэша L3': 'l3_cache_size',
+                '?Тепловыделение': 'tdp',
+                'Тип памяти': 'memory_type',
+                '?Интегрированное графическое ядро': 'integrated_graphics',
+                '?Название графического ядра': 'integrated_graphics_name',
+                '?Максимальная частота графического ядра': 'integrated_graphics_freq',
+            },
+            'motherboard': {
+                '?Socket': 'socket',
+                '?Тип': 'memory_type',
+                '?Макс. объем': 'max_memory',
+                '?Количество слотов': 'memory_slots',
+                '?Максимальная': 'max_memory_frequency',
+                '?Двухканальный': 'dual_channel',
+                '?Название': 'chipset_name',
+                '?Поддержка UEFI': 'uefi_support',
+                '?Общее количество разъемов SATA': 'sata_slots',
+                '?Количество слотов M.2': 'm2_slots',
+                '?Количество разъемов USB': 'usb_ports_total',
+                '?Основной разъем питания': 'main_power_connector',
+                '?Разъем питания процессора': 'cpu_power_connector',
+                '?Форм-фактор': 'form_factor',
+            },
+            'gpu': {
+                '?Тип подключения': 'connection_type',
+                'Кодовое название': 'video_processor',
+                '?Производитель': 'manufacturer',
+                '?Тип памяти': 'memory_type',
+                '?Объем памяти': 'memory_size',
+                '?Частота памяти': 'memory_frequency',
+                'Трассировка лучей': 'ray_tracing',
+                '?Версия DirectX': 'directx_version',
+                '?Версия OpenGL': 'opengl_version',
+                '?Необходимость дополнительного питания': 'additional_power_required',
+                '?Разъем дополнительного питания': 'additional_power_connector',
+                '?Рекомендуемая мощность блока питания': 'recommended_psu',
+                'Ширина': 'width',
+            },
+            'hdd': {
+                '?Объем жесткого диска': 'capacity',
+                '?Форм-фактор': 'form_factor',
+                '?Скорость записи': 'write_speed',
+                '?Скорость чтения': 'read_speed',
+                '?Скорость вращения': 'rpm'
+            },
+            'ssd': {
+                '?Объем': 'capacity',
+                '?Форм-фактор': 'form_factor',
+                '?Скорость записи': 'write_speed',
+                '?Скорость чтения': 'read_speed',
+                '?Тип PCI-E': 'pci_e_type'
+            },
+            'case': {
+                'Форм-фактор': 'motherboard_format',
+                'Макс. размер материнской платы': 'max_motherboard_size',
+                '?Цвет корпуса': 'case_color',
+                '?Материал корпуса': 'case_material',
+                '?Наличие окна на боковой стенке': 'side_window',
+                'Материал окна': 'window_material',
+                '?Максимальная высота процессорного кулера': 'max_cpu_cooler_height',
+                '?Максимальная длина видеокарты': 'max_gpu_length',
+                'Макс. длина блока питания': 'max_psu_length',
+                '?Возможность установки системы жидкостного охлаждения': 'liquid_cooling_support'
+            },
+            'cooler': {
+                'Сокет': 'supported_sockets',
+                '?Водяное охлаждение': 'liquid_cooling',
+                '?Максимальная рассеиваемая мощность': 'tdp'
+            },
+            'ram': {
+                '?Тип': 'type',
+                '?Объем одного модуля': 'module_capacity',
+                '?Количество модулей': 'module_count',
+                '?Тактовая частота': 'clock_frequency',
+                '?Радиатор': 'heat_spreader',
+                '?Поддержка XMP': 'xmp_support'
+            },
+            'psu': {
+                '?Форм-фактор': 'form_factor',
+                '?Мощность': 'power',
+                '?Ширина': 'width',
+                '?Высота': 'height',
+                '?Глубина': 'depth',
+                '?Вес': 'weight'
+            }
         }
 
-        save_to_json(result, product_type, title)
+    def get_measurement_units(self):
+        return [
+            'Мб/с', 'Мб', 'Гб', 'Тб', 'ч', 'нм', 'МГц', 'Вт', 'мм', 'rpm'
+        ]
 
-    except Exception as e:
-        print(e)
+    def save_to_json(self, data):
+        os.makedirs('res', exist_ok=True)
+        filename = f'res/{self.product_type}_{self.title.lower().replace(" ", "_").replace("/", "")}.json'
+        with open(filename, 'w', encoding='windows-1251') as json_file:
+            json.dump(data, json_file, ensure_ascii=False, indent=4)
+        print(f'Данные успешно сохранены в {filename}')
 
-def determine_type_from_url(url):
-    if 'utility-cases' in url:
-        return 'case'
-    elif 'utility-cpu' in url:
-        return 'cpu'
-    elif 'utility-graphicscards' in url:
-        return 'gpu'
-    elif 'utility-motherboards' in url:
-        return 'motherboard'    
-    elif 'utility-powermodules' in url:
-        return 'psu'    
-    elif 'utility-memory' in url:
-        return 'ram' 
-    else:
-        return 'unknown'
+    def determine_type_from_url(self):
+        if 'utility-cpu' in self.url:
+            self.product_type = 'cpu'
+        elif 'utility-motherboards' in self.url:
+            self.product_type = 'motherboard'
+        elif 'utility-graphicscards' in self.url:
+            self.product_type = 'gpu'
+        elif 'utility-harddisks' in self.url:
+            self.product_type = 'hdd'
+        elif 'utility-ssd' in self.url:
+            self.product_type = 'ssd'
+        elif 'utility-cases' in self.url:
+            self.product_type = 'case'
+        elif 'utility-cooling' in self.url:
+            self.product_type = 'cooler'
+        elif 'utility-memory' in self.url:
+            self.product_type = 'ram'
+        elif 'utility-powermodules' in self.url:
+            self.product_type = 'psu'
+        else:
+            self.product_type = 'unknown'
+        
+    def parse_product_and_tables(self):
+        try:
+            self.determine_type_from_url()
+            self.fetch_page()
+            self.parse_product_info()
+            tables = self.parse_tables()
+
+            img_tags = self.soup.find_all('img', class_='spec-images__img')
+            img_urls = [img['src'] for img in img_tags if img.get('src')]
+
+            self.title = re.sub(r'(Процессор |Материнская плата |Видеокарта |Жесткий диск |SSD диск |Корпус для компьютера |Кулер для процессора |Модуль памяти |Блок питания )\s*', '', self.title).strip()
+
+            result = {
+                'type': self.product_type,
+                'title': self.title,
+                'price': self.price,
+                'image_urls': img_urls,
+                'data': tables
+            }
+
+            self.save_to_json(result)
+
+        except Exception as e:
+            print(e)
+
 
 if __name__ == '__main__':
     while True:
         user_input = input('Введите ссылку (exit для выхода): ')
-        if user_input == "exit":
+        if user_input.lower() == "exit":
             break
         else:
-            parse_product_and_tables(user_input)
+            scraper = ProductScraper(user_input)
+            scraper.parse_product_and_tables()

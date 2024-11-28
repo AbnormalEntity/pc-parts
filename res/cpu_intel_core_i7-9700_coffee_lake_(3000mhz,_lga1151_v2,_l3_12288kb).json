@@ -1,0 +1,18 @@
+{
+    "type": "cpu",
+    "title": "Intel Core i7-9700 Coffee Lake (3000MHz, LGA1151 v2, L3 12288Kb)",
+    "price": 1409.4,
+    "image_urls": [
+        "https://static.1k.by/images/products/ip/125/ppb/2/3785961/icf6fe07e2.jpg"
+    ],
+    "data": {
+        "socket": "LGA1151 v2",
+        "core_count": 8,
+        "process_technology": 14,
+        "integrated_graphics": false,
+        "freq": 3000,
+        "turbo_boost_freq": 4700,
+        "l3_cache_size": 12,
+        "tdp": 65
+    }
+}

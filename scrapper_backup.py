@@ -2,10 +2,11 @@ import requests
 import re
 from bs4 import BeautifulSoup
 import json
+import os
 
 def fetch_page(url):
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537/36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7'
     }
     
@@ -23,9 +24,6 @@ def parse_product_info(soup):
         return title, price
     except AttributeError:
         raise Exception('Не удалось найти необходимые элементы на странице.')
-
-def extract_numbers(data):
-    return ''.join(re.findall(r'\d+', data))
 
 def parse_tables(soup, product_type):
     tables_container = soup.find('div', class_='spec-info__main')
@@ -311,58 +309,53 @@ def parse_tables(soup, product_type):
             #'Количество ранков': 'rank_count_chip'
         }
     }
-    
+
     for table in tables:
         table_data = [
             [col.get_text(strip=True) for col in row.find_all(['td', 'th'])]
             for row in table.find_all('tr')
             if row.find_all(['td', 'th'])
         ]
-        
+
+        measurement_units = [
+            'мгц', 'Гц', 'кГц', 'МГц', 'ГГц', 'дБ', 'Вт', 'нм', 'Мб',
+            'Гб', 'Тб', 'пб', 'Кб', 'МБ', 'ГБ', 'ТБ', 'пБ',
+            'кОм', 'МОм', 'ГОм', 'мА', 'А', 'кА', 'пФ', 'нФ', 'мФ', 'Ф',
+            'кВт', 'мВт', 'дм', 'см', 'м', 'км',
+            'пикосекунд', 'нс', 'мс', 'с', 'мин', 'ч', 'д',
+            'fps', 'dpi', 'ppi', 'ppm', 'RPM', 'K',
+            'дюймы', 'см', 'м', 'Гц', 'кГц', 'МГц',
+            'параметров', 'бит', 'pin'
+        ]
+    
         if product_type in field_mapping:
             for row in table_data:
                 if len(row) >= 2 and row[0] in field_mapping[product_type]:
                     new_key = field_mapping[product_type][row[0]]
-
                     value = row[1].strip()
 
-                    if '+' in row[1]:
+                    if value == '+':
                         combined_data[new_key] = True
-                    elif '-' in row[1]:
+                    elif value == '-':
                         combined_data[new_key] = False
                     else:
-                        if re.search(r'[А-Яа-я]', value):
-                            number_str = extract_numbers(value)
-                            combined_data[new_key] = int(number_str) if number_str else 0
+                        if all(char.isdigit() or char.isspace() for char in value):
+                            numeric_value = int(value.replace(' ', ''))
+                            combined_data[new_key] = numeric_value
+                        elif any(unit in value for unit in measurement_units):
+                            numeric_value = re.sub(r'[^0-9]', '', value)
+                            combined_data[new_key] = int(numeric_value) if numeric_value else value
                         else:
-                            try:
-                                combined_data[new_key] = int(value)
-                            except ValueError:
-                                combined_data[new_key] = value
+                            combined_data[new_key] = value
 
     return combined_data
 
 def save_to_json(data, product_type, title):
+    os.makedirs('res', exist_ok=True)
     filename = f'res/{product_type}_{title.lower().replace(" ", "_")}.json'
-    with open(filename, 'w', encoding='utf-8') as json_file:
+    with open(filename, 'w', encoding='windows-1251') as json_file:
         json.dump(data, json_file, ensure_ascii=False, indent=4)
     print(f'Данные успешно сохранены в {filename}')
-
-def determine_type_from_url(url):
-    if 'utility-cases' in url:
-        return 'case'
-    elif 'utility-cpu' in url:
-        return 'cpu'
-    elif 'utility-graphicscards' in url:
-        return 'gpu'
-    elif 'utility-motherboards' in url:
-        return 'motherboard'    
-    elif 'utility-powermodules' in url:
-        return 'psu'    
-    elif 'utility-memory' in url:
-        return 'ram' 
-    else:
-        return 'unknown'
 
 def parse_product_and_tables(url):
     try:
@@ -385,10 +378,16 @@ def parse_product_and_tables(url):
         elif product_type == 'ram':
             title = ''.join(raw_title[14:])   
             title = title.replace('/', '_')       
+
+        # Get the image URL
+        img_tag = soup.find('img', class_='spec-images__img')
+        img_url = img_tag['src'] if img_tag and img_tag['src'] else None
+        
         result = {
             'type': product_type,
             'title': title,
             'price': price,
+            'image_url': img_url,
             'data': tables
         }
 
@@ -397,6 +396,26 @@ def parse_product_and_tables(url):
     except Exception as e:
         print(e)
 
+def determine_type_from_url(url):
+    if 'utility-cases' in url:
+        return 'case'
+    elif 'utility-cpu' in url:
+        return 'cpu'
+    elif 'utility-graphicscards' in url:
+        return 'gpu'
+    elif 'utility-motherboards' in url:
+        return 'motherboard'    
+    elif 'utility-powermodules' in url:
+        return 'psu'    
+    elif 'utility-memory' in url:
+        return 'ram' 
+    else:
+        return 'unknown'
+
 if __name__ == '__main__':
-    product_url = input('Введите ссылку на товар: ')
-    parse_product_and_tables(product_url)
+    while True:
+        user_input = input('Введите ссылку (exit для выхода): ')
+        if user_input == "exit":
+            break
+        else:
+            parse_product_and_tables(user_input)
